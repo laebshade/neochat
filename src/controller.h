@@ -61,6 +61,8 @@ public:
     void setAboutData(const KAboutData &aboutData);
     [[nodiscard]] KAboutData aboutData() const;
 
+    Q_INVOKABLE void testConnection(const QString &connection);
+
     enum PasswordStatus {
         Success,
         Wrong,
@@ -75,6 +77,7 @@ private:
     QVector<Connection *> m_connections;
     QPointer<Connection> m_connection;
     bool m_busy = false;
+    BaseJob *m_currentTestJob;
 
     static QByteArray loadAccessTokenFromFile(const AccountSettings &account);
     QByteArray loadAccessTokenFromKeyChain(const AccountSettings &account);
@@ -110,6 +113,7 @@ Q_SIGNALS:
     void showWindow();
     void openRoom(NeoChatRoom *room);
     void userConsentRequired(QUrl url);
+    void testConnectionResult(const QString &connection, bool usable);
 
 public Q_SLOTS:
     void logout(Quotient::Connection *conn, bool serverSideLogout);
