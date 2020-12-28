@@ -38,7 +38,7 @@ Kirigami.ScrollablePage {
     
     ColumnLayout {
         Kirigami.Icon {
-            source: "neochat"
+            source: "org.kde.neochat"
             Layout.fillWidth: true
             Layout.preferredHeight: Kirigami.Units.gridUnit * 16
         }
