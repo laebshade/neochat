@@ -15,7 +15,6 @@
         <file>imports/NeoChat/Page/ImageEditorPage.qml</file>
         <file>imports/NeoChat/Page/DevicesPage.qml</file>
         <file>imports/NeoChat/Page/WelcomePage.qml</file>
-        <file>imports/NeoChat/Page/HomeserverPage.qml</file>
         <file>imports/NeoChat/Component/qmldir</file>
         <file>imports/NeoChat/Component/ChatTextInput.qml</file>
         <file>imports/NeoChat/Component/AutoMouseArea.qml</file>
@@ -39,6 +38,7 @@
         <file>imports/NeoChat/Component/Login/Password.qml</file>
         <file>imports/NeoChat/Component/Login/LoginRegister.qml</file>
         <file>imports/NeoChat/Component/Login/Loading.qml</file>
+        <file>imports/NeoChat/Component/Login/Homeserver.qml</file>
         <file>imports/NeoChat/Setting/Setting.qml</file>
         <file>imports/NeoChat/Setting/qmldir</file>
         <file>imports/NeoChat/Setting/Palette.qml</file>

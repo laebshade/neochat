@@ -38,6 +38,9 @@ ColumnLayout {
         Layout.alignment: Qt.AlignHCenter
         text: i18n("Register")
         Layout.preferredWidth: Kirigami.Units.gridUnit * 12
-        onClicked: pageStack.layers.push(homeserverPage, {'register': true})
+        onClicked: {
+            loginRegister.nextUrl = "qrc:/imports/NeoChat/Component/Login/Homeserver.qml";
+            next();
+        }
     }
 }
