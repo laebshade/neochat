@@ -45,7 +45,6 @@ public:
     void addConnection(Connection *c);
     void dropConnection(Connection *c);
 
-    Q_INVOKABLE void loginWithCredentials(const QString &, const QString &, const QString &, QString);
     Q_INVOKABLE void loginWithAccessToken(const QString &, const QString &, const QString &, const QString &);
 
     Q_INVOKABLE void changePassword(Quotient::Connection *connection, const QString &currentPassword, const QString &newPassword);
@@ -61,7 +60,8 @@ public:
     void setAboutData(const KAboutData &aboutData);
     [[nodiscard]] KAboutData aboutData() const;
 
-    Q_INVOKABLE void testConnection(const QString &connection);
+    bool saveAccessTokenToFile(const AccountSettings &account, const QByteArray &accessToken);
+    bool saveAccessTokenToKeyChain(const AccountSettings &account, const QByteArray &accessToken);
 
     enum PasswordStatus {
         Success,
@@ -77,13 +77,10 @@ private:
     QVector<Connection *> m_connections;
     QPointer<Connection> m_connection;
     bool m_busy = false;
-    BaseJob *m_currentTestJob;
 
     static QByteArray loadAccessTokenFromFile(const AccountSettings &account);
     QByteArray loadAccessTokenFromKeyChain(const AccountSettings &account);
 
-    bool saveAccessTokenToFile(const AccountSettings &account, const QByteArray &accessToken);
-    bool saveAccessTokenToKeyChain(const AccountSettings &account, const QByteArray &accessToken);
     void loadSettings();
     void saveSettings() const;
 

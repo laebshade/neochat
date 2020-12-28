@@ -12,11 +12,13 @@ import org.kde.kirigami 2.12 as Kirigami
 
 import org.kde.neochat 1.0
 
+import NeoChat.Component.Login 1.0
+
 Kirigami.ScrollablePage {
     id: welcomePage
     
-    title: i18n("Welcome")
-    
+    title: module.item.title ?? i18n("Welcome")
+
     ColumnLayout {
         Kirigami.Icon {
             source: "org.kde.neochat"
@@ -27,25 +29,32 @@ Kirigami.ScrollablePage {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             font.pixelSize: 25
-            text: i18n("Welcome to Matrix")     
+            text: module.item.title ?? i18n("Welcome to Matrix")
         }
-        Controls.Button {
+
+        Loader {
+            id: module
             Layout.alignment: Qt.AlignHCenter
-            text: i18n("Login")
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 12
-            onClicked: pageStack.layers.push(homeserverPage, {'register': false})
+            source: "qrc:/imports/NeoChat/Component/Login/LoginRegister.qml"
         }
+
+        Connections {
+            target: module.item
+            function onNext() {
+                module.item.process()
+                module.source = module.item.nextUrl
+            }
+        }
+
         Controls.Button {
+            text: i18n("Continue")
+            enabled: module.item.acceptable
+            visible: module.item.showContinueButton
             Layout.alignment: Qt.AlignHCenter
-            text: i18n("Register")
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 12
-            onClicked: pageStack.layers.push(homeserverPage, {'register': true})
+            onClicked: {
+                module.item.process()
+                module.source = module.item.nextUrl
+            }
         }
     }
-    
-    Component {
-        id: homeserverPage
-        HomeserverPage {
-        }
-    }    
 }

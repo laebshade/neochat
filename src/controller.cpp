@@ -92,50 +92,6 @@ inline QString accessTokenFileName(const AccountSettings &account)
     return QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + '/' + fileName;
 }
 
-void Controller::loginWithCredentials(const QString &serverAddr, const QString &user, const QString &pass, QString deviceName)
-{
-    if (user.isEmpty() || pass.isEmpty()) {
-        return;
-    }
-
-    if (deviceName.isEmpty()) {
-        deviceName = "NeoChat " + QSysInfo::machineHostName() + " " + QSysInfo::productType() + " " + QSysInfo::productVersion() + " " + QSysInfo::currentCpuArchitecture();
-    }
-
-    auto conn = new Connection(this);
-    const QUrl serverUrl = QUrl(serverAddr);
-    // we are using a fake mixd since resolveServer just set the homeserver url :sigh:
-    conn->resolveServer("@username:" + serverUrl.host() + ":" + QString::number(serverUrl.port(443)));
-
-    connect(conn, &Connection::loginFlowsChanged, this, [this, user, conn, pass, deviceName]() {
-        conn->loginWithPassword(user, pass, deviceName, "");
-        connect(conn, &Connection::connected, this, [this, conn, deviceName] {
-            AccountSettings account(conn->userId());
-            account.setKeepLoggedIn(true);
-            account.clearAccessToken(); // Drop the legacy - just in case
-            account.setHomeserver(conn->homeserver());
-            account.setDeviceId(conn->deviceId());
-            account.setDeviceName(deviceName);
-            if (!saveAccessTokenToKeyChain(account, conn->accessToken())) {
-                qWarning() << "Couldn't save access token";
-            }
-            account.sync();
-            addConnection(conn);
-            setActiveConnection(conn);
-        });
-        connect(conn, &Connection::networkError, [=](QString error, const QString &, int, int) {
-            Q_EMIT globalErrorOccured(i18n("Network Error"), std::move(error));
-        });
-        connect(conn, &Connection::loginError, [=](QString error, const QString &) {
-            Q_EMIT errorOccured(i18n("Login Failed"), std::move(error));
-        });
-    });
-
-    connect(conn, &Connection::resolveError, this, [=](QString error) {
-        Q_EMIT globalErrorOccured(i18n("Network Error"), std::move(error));
-    });
-}
-
 void Controller::loginWithAccessToken(const QString &serverAddr, const QString &user, const QString &token, const QString &deviceName)
 {
     if (user.isEmpty() || token.isEmpty()) {
@@ -552,29 +508,4 @@ NeochatDeleteDeviceJob::NeochatDeleteDeviceJob(const QString &deviceId, const Om
     addParam<IfNotEmpty>(_data, QStringLiteral("auth"), auth);
     setRequestData(std::move(_data));
 
-}
-
-void Controller::testConnection(const QString &connection)
-{
-    if(m_currentTestJob) {
-        m_currentTestJob->abandon();        
-    }
-    QUrl url = QUrl::fromUserInput(connection);
-    url.setScheme(QStringLiteral("https"));
-    if(!url.isValid()) {
-        return;
-    }
-    
-    Connection *c = new Connection(this);
-    c->resolveServer(QStringLiteral("@username:") + connection);
-    auto job = c->callApi<GetWellknownJob>();
-    m_currentTestJob = job;
-    connect(job, &BaseJob::result, this, [connection, c, this, job](){
-        c->setHomeserver(job->data().homeserver.baseUrl);
-        connect(c, &Connection::loginFlowsChanged, this, [=](){
-            Q_EMIT testConnectionResult(connection, c->isUsable());
-            c->deleteLater();
-            m_currentTestJob = nullptr;
-        });
-    });
 }
