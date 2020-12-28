@@ -31,7 +31,7 @@ Kirigami.ScrollablePage {
         target: Controller
         onTestConnectionResult: {
             if(homeserver === connection) {
-                continueButton.enabled = usable
+                continueButton.enabled = usable;
             }
         }
     }
