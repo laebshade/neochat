@@ -13,16 +13,15 @@ import org.kde.kirigami 2.12 as Kirigami
 import org.kde.neochat 1.0
 
 Kirigami.FormLayout {
-
     property var homeserver: customHomeserver.visible ? customHomeserver.text : serverCombo.currentText
-    property bool acceptable: LoginHelper.homeserverReachable
+    property bool acceptable: LoginHelper.homeserverReachable && !customHomeserver.visible || customHomeserver.acceptableInput
     property string title: "Homeserver"
     property bool showContinueButton: true
 
-    Component.onCompleted: Controller.testConnection(homeserver)
+    Component.onCompleted: Controller.testHomeserver(homeserver)
 
     onHomeserverChanged: {
-        LoginHelper.testConnection("@user:" + homeserver)
+        LoginHelper.testHomeserver("@user:" + homeserver)
     }
 
     Controls.ComboBox {
@@ -38,7 +37,10 @@ Kirigami.FormLayout {
         Kirigami.FormData.label: i18n("Url:")
         visible: serverCombo.currentIndex === 3
         onTextChanged: {
-            Controller.testConnection(text)
+            Controller.testHomeserver(text)
+        }
+        validator: RegularExpressionValidator {
+            regularExpression: /([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9]+(:[0-9]+)?/
         }
     }
 }
