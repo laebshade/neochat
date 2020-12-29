@@ -9,6 +9,7 @@
 #include <QObject>
 
 #include "csapi/wellknown.h"
+#include "connection.h"
 
 using namespace Quotient;
 
@@ -20,6 +21,9 @@ class Login : public QObject
     Q_PROPERTY(QString matrixId READ matrixId WRITE setMatrixId NOTIFY matrixIdChanged)
     Q_PROPERTY(QString password READ password WRITE setPassword NOTIFY passwordChanged)
     Q_PROPERTY(QString deviceName READ deviceName WRITE setDeviceName NOTIFY deviceNameChanged)
+    Q_PROPERTY(bool supportsSso READ supportsSso NOTIFY loginFlowsChanged STORED false)
+    Q_PROPERTY(bool supportsPassword READ supportsPassword NOTIFY loginFlowsChanged STORED false)
+    Q_PROPERTY(QUrl ssoUrl READ ssoUrl NOTIFY ssoUrlChanged)
 
 public:
     explicit Login(QObject *parent = nullptr);
@@ -36,7 +40,13 @@ public:
     QString deviceName() const;
     void setDeviceName(const QString &deviceName);
 
+    bool supportsPassword() const;
+    bool supportsSso() const;
+
+    QUrl ssoUrl() const;
+
     Q_INVOKABLE void login();
+    Q_INVOKABLE void loginWithSso();
 
 Q_SIGNALS:
     void homeserverReachableChanged();
@@ -44,13 +54,20 @@ Q_SIGNALS:
     void passwordChanged();
     void deviceNameChanged();
     void initialSyncFinished();
+    void loginFlowsChanged();
+    void ssoUrlChanged();
+    void connected();
 
 private:
     void setHomeserverReachable(bool reachable);
 
     bool m_homeserverReachable;
-    BaseJob *m_currentTestJob;
+    BaseJob *m_currentTestJob = nullptr;
     QString m_matrixId;
     QString m_password;
     QString m_deviceName;
+    bool m_supportsSso = false;
+    bool m_supportsPassword = false;
+    Connection *m_connection = nullptr;
+    QUrl m_ssoUrl;
 };

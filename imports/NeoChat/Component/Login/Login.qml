@@ -19,7 +19,9 @@ Kirigami.FormLayout {
 
     property bool acceptable: matrixIdField.acceptableInput && LoginHelper.homeserverReachable
     property bool showContinueButton: true
-    property string nextUrl: "qrc:/imports/NeoChat/Component/Login/Password.qml"
+    property string nextUrl: LoginHelper.supportsSso && LoginHelper.supportsPassword ? "qrc:/imports/NeoChat/Component/Login/LoginMethod.qml"
+        : LoginHelper.supportsPassword ? "qrc:/imports/NeoChat/Component/Login/Password.qml"
+        : "qrc:/imports/NeoChat/Component/Login/Sso.qml"
     property string title: i18n("Login")
 
     QQC2.TextField {

@@ -33,21 +33,27 @@ void Login::testHomeserver(QString matrixId)
     setHomeserverReachable(false);
     if (m_currentTestJob) {
         m_currentTestJob->abandon();
+        m_currentTestJob = nullptr;
     }
     if (!matrixId.startsWith('@')) {
         matrixId.prepend('@');
     }
-
-    Connection *c = new Connection(this);
-    c->resolveServer(matrixId);
-    auto job = c->callApi<GetWellknownJob>();
+    if(m_connection) {
+        delete m_connection;
+        m_connection = nullptr;
+    }
+    m_connection = new Connection(this);
+    m_connection->resolveServer(matrixId);
+    auto job = m_connection->callApi<GetWellknownJob>();
     m_currentTestJob = job;
     connect(job, &BaseJob::result, this, [=]() {
-        c->setHomeserver(job->data().homeserver.baseUrl);
-        connect(c, &Connection::loginFlowsChanged, this, [=]() {
-            setHomeserverReachable(c->isUsable());
-            c->deleteLater();
+        m_connection->setHomeserver(job->data().homeserver.baseUrl);
+        connect(m_connection, &Connection::loginFlowsChanged, this, [=]() {
+            setHomeserverReachable(m_connection->isUsable());
             m_currentTestJob = nullptr;
+            m_supportsSso = m_connection->supportsSso();
+            m_supportsPassword = m_connection->supportsPasswordAuth();
+            Q_EMIT loginFlowsChanged();
         });
     });
 }
@@ -89,39 +95,80 @@ void Login::login()
 {
     setDeviceName("NeoChat " + QSysInfo::machineHostName() + " " + QSysInfo::productType() + " " + QSysInfo::productVersion() + " " + QSysInfo::currentCpuArchitecture());
 
-    auto conn = new Connection(this);
-    conn->resolveServer(m_matrixId);
+    m_connection = new Connection(this);
+    m_connection->resolveServer(m_matrixId);
 
-    connect(conn, &Connection::loginFlowsChanged, this, [=]() {
-        conn->loginWithPassword(m_matrixId, m_password, m_deviceName, "");
-        connect(conn, &Connection::connected, this, [=] {
-            AccountSettings account(conn->userId());
+    connect(m_connection, &Connection::loginFlowsChanged, this, [=]() {
+        m_connection->loginWithPassword(m_matrixId, m_password, m_deviceName, "");
+        connect(m_connection, &Connection::connected, this, [=] {
+            AccountSettings account(m_connection->userId());
             account.setKeepLoggedIn(true);
             account.clearAccessToken(); // Drop the legacy - just in case
-            account.setHomeserver(conn->homeserver());
-            account.setDeviceId(conn->deviceId());
+            account.setHomeserver(m_connection->homeserver());
+            account.setDeviceId(m_connection->deviceId());
             account.setDeviceName(m_deviceName);
-            if (!Controller::instance().saveAccessTokenToKeyChain(account, conn->accessToken())) {
+            if (!Controller::instance().saveAccessTokenToKeyChain(account, m_connection->accessToken())) {
                 qWarning() << "Couldn't save access token";
             }
             account.sync();
-            Controller::instance().addConnection(conn);
-            Controller::instance().setActiveConnection(conn);
+            Controller::instance().addConnection(m_connection);
+            Controller::instance().setActiveConnection(m_connection);
         });
-        connect(conn, &Connection::networkError, [=](QString error, const QString &, int, int) {
+        connect(m_connection, &Connection::networkError, [=](QString error, const QString &, int, int) {
             Q_EMIT Controller::instance().globalErrorOccured(i18n("Network Error"), std::move(error));
         });
-        connect(conn, &Connection::loginError, [=](QString error, const QString &) {
+        connect(m_connection, &Connection::loginError, [=](QString error, const QString &) {
             Q_EMIT Controller::instance().errorOccured(i18n("Login Failed"), std::move(error));
         });
     });
 
-    connect(conn, &Connection::resolveError, this, [=](QString error) {
+    connect(m_connection, &Connection::resolveError, this, [=](QString error) {
         Q_EMIT Controller::instance().globalErrorOccured(i18n("Network Error"), std::move(error));
     });
 
-    connect(conn, &Connection::syncDone, this, [=]() {
+    connect(m_connection, &Connection::syncDone, this, [=]() {
         Q_EMIT initialSyncFinished();
-        disconnect(conn, &Connection::syncDone, this, nullptr);
+        disconnect(m_connection, &Connection::syncDone, this, nullptr);
+    });
+}
+
+bool Login::supportsPassword() const
+{
+    return m_supportsPassword;
+}
+
+bool Login::supportsSso() const
+{
+    return m_supportsSso;
+}
+
+QUrl Login::ssoUrl() const
+{
+    return m_ssoUrl;
+}
+
+void Login::loginWithSso()
+{
+    SsoSession *session = m_connection->prepareForSso("NeoChat " + QSysInfo::machineHostName() + " " + QSysInfo::productType() + " " + QSysInfo::productVersion() + " " + QSysInfo::currentCpuArchitecture());
+    m_ssoUrl = session->ssoUrl();
+    Q_EMIT ssoUrlChanged();
+    connect(m_connection, &Connection::connected, [=](){
+        Q_EMIT connected();
+        AccountSettings account(m_connection->userId());
+            account.setKeepLoggedIn(true);
+            account.clearAccessToken(); // Drop the legacy - just in case
+            account.setHomeserver(m_connection->homeserver());
+            account.setDeviceId(m_connection->deviceId());
+            account.setDeviceName(m_deviceName);
+            if (!Controller::instance().saveAccessTokenToKeyChain(account, m_connection->accessToken())) {
+                qWarning() << "Couldn't save access token";
+            }
+            account.sync();
+            Controller::instance().addConnection(m_connection);
+            Controller::instance().setActiveConnection(m_connection);
+    });
+    connect(m_connection, &Connection::syncDone, this, [=]() {
+        Q_EMIT initialSyncFinished();
+        disconnect(m_connection, &Connection::syncDone, this, nullptr);
     });
 }
