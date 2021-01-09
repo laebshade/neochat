@@ -14,33 +14,22 @@ import org.kde.neochat 1.0
 
 import NeoChat.Component.Login 1.0
 
-ColumnLayout {
+LoginSteep {
     id: loginRegister
 
-    property bool showContinueButton: false
-    property string nextUrl: ""
-    signal next()
-
-    function process() {
-    }
-
     Layout.alignment: Qt.AlignHCenter
+
     Controls.Button {
         Layout.alignment: Qt.AlignHCenter
         text: i18n("Login")
         Layout.preferredWidth: Kirigami.Units.gridUnit * 12
-        onClicked: {
-            loginRegister.nextUrl = "qrc:/imports/NeoChat/Component/Login/Login.qml";
-            next();
-        }
+        onClicked: processed("qrc:/imports/NeoChat/Component/Login/Login.qml")
     }
+
     Controls.Button {
         Layout.alignment: Qt.AlignHCenter
         text: i18n("Register")
         Layout.preferredWidth: Kirigami.Units.gridUnit * 12
-        onClicked: {
-            loginRegister.nextUrl = "qrc:/imports/NeoChat/Component/Login/Homeserver.qml";
-            next();
-        }
+        onClicked: processed("qrc:/imports/NeoChat/Component/Login/Homeserver.qml")
     }
 }

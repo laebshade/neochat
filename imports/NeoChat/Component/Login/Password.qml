@@ -13,19 +13,31 @@ import NeoChat.Component 1.0
 
 import org.kde.kirigami 2.12 as Kirigami
 
-Kirigami.FormLayout {
+LoginSteep {
+    id: root
 
-    property bool acceptable: passwordField.text !== ""
-    property bool showContinueButton: true
-    property string nextUrl: "qrc:/imports/NeoChat/Component/Login/Loading.qml"
-    property string title: i18n("Password")
+    property bool loading: false
 
-    Kirigami.PasswordField {
-        id: passwordField
-        onTextChanged: LoginHelper.password = text
+    title: i18nc("@title", "Password")
+
+    action: Kirigami.Action {
+        enabled: passwordField.text.length > 0
+        onTriggered: {
+            LoginHelper.login();
+            root.loading = true;
+        }
     }
 
-    function process() {
-        LoginHelper.login()
+    Kirigami.FormLayout {
+        Kirigami.PasswordField {
+            id: passwordField
+            onTextChanged: LoginHelper.password = text
+        }
+
+        QQC2.Button {
+            id: continueButton
+            text: i18nc("@action:button", "Continue")
+            action: root.action
+        }
     }
 }

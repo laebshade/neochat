@@ -15,30 +15,58 @@ import NeoChat.Component 1.0
 
 import org.kde.kirigami 2.12 as Kirigami
 
-Kirigami.FormLayout {
+LoginSteep {
+    id: root
 
-    property bool acceptable: matrixIdField.acceptableInput && LoginHelper.homeserverReachable
-    property bool showContinueButton: true
-    property string nextUrl: LoginHelper.supportsSso && LoginHelper.supportsPassword ? "qrc:/imports/NeoChat/Component/Login/LoginMethod.qml"
-        : LoginHelper.supportsPassword ? "qrc:/imports/NeoChat/Component/Login/Password.qml"
-        : "qrc:/imports/NeoChat/Component/Login/Sso.qml"
-    property string title: i18n("Login")
+    property bool loading: false
 
-    QQC2.TextField {
-        id: matrixIdField
-        Kirigami.FormData.label: i18n("Matrix ID:")
-        placeholderText: "@user:matrix.org"
-        onTextChanged: {
-            if(matrixIdField.acceptableInput) {
-                LoginHelper.testHomeserver(text);
+    title: i18nc("@title", "Login")
+
+    Kirigami.FormLayout {
+        QQC2.TextField {
+            id: matrixIdField
+            Kirigami.FormData.label: i18n("Matrix ID:")
+            placeholderText: "@user:matrix.org"
+            onTextChanged: {
+                if (acceptableInput) {
+                    LoginHelper.testHomeserver(text);
+                    root.loading = true;
+                }
+            }
+
+            validator: RegularExpressionValidator {
+                regularExpression: /^\@?[a-zA-Z0-9\._=\-/]+\:[a-zA-Z0-9]+\.[a-zA-Z]+(:[0-9]+)?$/
             }
         }
-        validator: RegularExpressionValidator {
-              regularExpression: /^\@?[a-zA-Z0-9\._=\-/]+\:[a-zA-Z0-9]+\.[a-zA-Z]+(:[0-9]+)?$/
+
+        QQC2.Button {
+            id: continueButton
+            text: root.loading ? i18n("Loading") : i18nc("@action:button", "Continue")
+            action: root.action
         }
     }
 
-    function process() {
-        LoginHelper.matrixId = matrixIdField.text
+    Connections {
+        target: LoginHelper
+        onTestHomeserverFinished: {
+            root.loading = false;
+        }
+        onHomeserverReachableChanged: if (LoginHelper.homeserverReachable) {
+            continueButton.forceActiveFocus();
+        }
+    }
+
+    action: Kirigami.Action {
+        onTriggered: {
+            LoginHelper.matrixId = matrixIdField.text
+            if (LoginHelper.supportsSso && LoginHelper.supportsPassword) {
+                processed("qrc:/imports/NeoChat/Component/Login/LoginMethod.qml");
+            } else if (LoginHelper.supportsPassword) {
+                processed("qrc:/imports/NeoChat/Component/Login/Password.qml");
+            } else {
+                processed("qrc:/imports/NeoChat/Component/Login/Sso.qml");
+            }
+        }
+        enabled: matrixIdField.acceptableInput && LoginHelper.homeserverReachable
     }
 }

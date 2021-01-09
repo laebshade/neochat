@@ -15,6 +15,20 @@
 Login::Login(QObject *parent)
     : QObject(parent)
 {
+    init();
+}
+
+void Login::init()
+{
+    m_homeserverReachable = false;
+    m_currentTestJob = nullptr;
+    m_connection = nullptr;
+    m_matrixId = QString();
+    m_password = QString();
+    m_deviceName = QString();
+    m_supportsSso = false;
+    m_supportsPassword = false;
+    m_ssoUrl = QUrl();
 }
 
 void Login::setHomeserverReachable(bool reachable)
@@ -38,7 +52,7 @@ void Login::testHomeserver(QString matrixId)
     if (!matrixId.startsWith('@')) {
         matrixId.prepend('@');
     }
-    if(m_connection) {
+    if (m_connection) {
         delete m_connection;
         m_connection = nullptr;
     }
@@ -54,7 +68,11 @@ void Login::testHomeserver(QString matrixId)
             m_supportsSso = m_connection->supportsSso();
             m_supportsPassword = m_connection->supportsPasswordAuth();
             Q_EMIT loginFlowsChanged();
+            Q_EMIT testHomeserverFinished();
         });
+    });
+    connect(job, &BaseJob::failure, this, [=]() {
+        Q_EMIT testHomeserverFinished();
     });
 }
 
@@ -118,7 +136,7 @@ void Login::login()
             Q_EMIT Controller::instance().globalErrorOccured(i18n("Network Error"), std::move(error));
         });
         connect(m_connection, &Connection::loginError, [=](QString error, const QString &) {
-            Q_EMIT Controller::instance().errorOccured(i18n("Login Failed"), std::move(error));
+            Q_EMIT errorOccured(i18n("Login Failed"));
         });
     });
 

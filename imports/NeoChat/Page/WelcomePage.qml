@@ -16,8 +16,27 @@ import NeoChat.Component.Login 1.0
 
 Kirigami.ScrollablePage {
     id: welcomePage
-    
+
     title: module.item.title ?? i18n("Welcome")
+
+    header: Controls.Control {
+        contentItem: Kirigami.InlineMessage {
+            id: errrorMessage
+            type: Kirigami.MessageType.Error
+            showCloseButton: true
+            visible: false
+        }
+    }
+
+    Component.onCompleted: LoginHelper.init()
+
+    Connections {
+        target: LoginHelper
+        onErrorOccured: {
+            errrorMessage.text = message;
+            errrorMessage.visible = true;
+        }
+    }
 
     ColumnLayout {
         Kirigami.Icon {
@@ -40,20 +59,8 @@ Kirigami.ScrollablePage {
 
         Connections {
             target: module.item
-            function onNext() {
-                module.item.process()
-                module.source = module.item.nextUrl
-            }
-        }
-
-        Controls.Button {
-            text: i18n("Continue")
-            enabled: module.item.acceptable
-            visible: module.item.showContinueButton
-            Layout.alignment: Qt.AlignHCenter
-            onClicked: {
-                module.item.process()
-                module.source = module.item.nextUrl
+            function onProcessed(nextUrl) {
+                module.source = nextUrl;
             }
         }
     }

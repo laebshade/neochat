@@ -28,6 +28,8 @@ class Login : public QObject
 public:
     explicit Login(QObject *parent = nullptr);
 
+    Q_INVOKABLE void init();
+
     bool homeserverReachable() const;
     Q_INVOKABLE void testHomeserver(QString matrixId);
 
@@ -50,6 +52,7 @@ public:
 
 Q_SIGNALS:
     void homeserverReachableChanged();
+    void testHomeserverFinished();
     void matrixIdChanged();
     void passwordChanged();
     void deviceNameChanged();
@@ -57,6 +60,7 @@ Q_SIGNALS:
     void loginFlowsChanged();
     void ssoUrlChanged();
     void connected();
+    void errorOccured(QString message);
 
 private:
     void setHomeserverReachable(bool reachable);
