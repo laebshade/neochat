@@ -28,14 +28,10 @@ ColumnLayout {
     /// Should call \sa processed when it finish successfully.
     property Action action: null
 
-    /// This signal emitted when the the flow should move to the next
-    /// ui part.
-    signal next();
+    /// Called when swiching to the next steep.
+    signal processed(url nextUrl)
 
-    /// Called when the process function finished.
-    signal processed(url nextUrl);
-
-    signal errorOccured(string message);
+    signal message(string message)
 
     Layout.alignment: Qt.AlignHCenter
 }

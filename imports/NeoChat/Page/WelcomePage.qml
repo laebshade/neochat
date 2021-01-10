@@ -21,7 +21,7 @@ Kirigami.ScrollablePage {
 
     header: Controls.Control {
         contentItem: Kirigami.InlineMessage {
-            id: errrorMessage
+            id: headerMessage
             type: Kirigami.MessageType.Error
             showCloseButton: true
             visible: false
@@ -33,8 +33,9 @@ Kirigami.ScrollablePage {
     Connections {
         target: LoginHelper
         onErrorOccured: {
-            errrorMessage.text = message;
-            errrorMessage.visible = true;
+            headerMessage.text = message;
+            headerMessage.visible = true;
+            headerMessage.type = Kirigami.MessageType.Error;
         }
     }
 
@@ -61,6 +62,11 @@ Kirigami.ScrollablePage {
             target: module.item
             function onProcessed(nextUrl) {
                 module.source = nextUrl;
+            }
+            function onMessage(message) {
+                headerMessage.text = message;
+                headerMessage.visible = true;
+                headerMessage.type = Kirigami.MessageType.Information;
             }
         }
     }

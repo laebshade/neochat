@@ -14,31 +14,25 @@ import NeoChat.Component 1.0
 
 import org.kde.kirigami 2.12 as Kirigami
 
-Kirigami.FormLayout {
+LoginSteep {
+    id: root
+    title: i18nc("@title", "Login with single sign-on")
 
-    property bool acceptable: false
-    property bool showContinueButton: false
-    property string nextUrl: "qrc:/imports/NeoChat/Component/Login/Loading.qml"
-    property string title: i18n("Login with single sign-on")
-
-    signal next()
-
-    Connections {
-        target: LoginHelper
-        onSsoUrlChanged: {
-            Qt.openUrlExternally(LoginHelper.ssoUrl)
+    Kirigami.FormLayout {
+        Connections {
+            target: LoginHelper
+            onSsoUrlChanged: {
+                Qt.openUrlExternally(LoginHelper.ssoUrl)
+            }
+            onConnected: proccessed("qrc:/imports/NeoChat/Component/Login/Loading.qml")
         }
-        onConnected: next()
-    }
 
-    QQC2.Button {
-        text: i18n("Login")
-        onClicked: {
-            LoginHelper.loginWithSso()
+        QQC2.Button {
+            text: i18n("Login")
+            onClicked: {
+                LoginHelper.loginWithSso()
+                root.message(i18n("Complete the autentification steeps in your browser"))
+            }
         }
-    }
-
-    function process() {
-        //Do nothing
     }
 }
