@@ -5,42 +5,60 @@
  */
 
 import QtQuick 2.14
-import QtQuick.Controls 2.14 as Controls
+import QtQuick.Controls 2.14 as QQC2
 import QtQuick.Layouts 1.14
 
 import org.kde.kirigami 2.12 as Kirigami
 
 import org.kde.neochat 1.0
 
-Kirigami.FormLayout {
-    property var homeserver: customHomeserver.visible ? customHomeserver.text : serverCombo.currentText
-    property bool acceptable: LoginHelper.homeserverReachable && !customHomeserver.visible || customHomeserver.acceptableInput
-    property string title: "Homeserver"
-    property bool showContinueButton: true
+LoginSteep {
+    id: root
 
-    Component.onCompleted: Controller.testHomeserver(homeserver)
+    readonly property var homeserver: customHomeserver.visible ? customHomeserver.text : serverCombo.currentText
+    property bool loading: false
+
+    title: i18n("@title", "Select an Homeserver")
+
+    action: Kirigami.Action {
+        enabled: LoginHelper.homeserverReachable && !customHomeserver.visible || customHomeserver.acceptableInput
+        onTriggered: {
+            // TODO
+            console.log("register todo")
+        }
+    }
 
     onHomeserverChanged: {
         LoginHelper.testHomeserver("@user:" + homeserver)
     }
 
-    Controls.ComboBox {
-        id: serverCombo
+    Kirigami.FormLayout {
+        Component.onCompleted: Controller.testHomeserver(homeserver)
 
-        Kirigami.FormData.label: i18n("Homeserver:")
-        model: ["matrix.org", "kde.org", "tchncs.de", i18n("Other...")]
-        Layout.alignment: Qt.AlignHCenter
-    }
-    Controls.TextField {
-        id: customHomeserver
+        QQC2.ComboBox {
+            id: serverCombo
 
-        Kirigami.FormData.label: i18n("Url:")
-        visible: serverCombo.currentIndex === 3
-        onTextChanged: {
-            Controller.testHomeserver(text)
+            Kirigami.FormData.label: i18n("Homeserver:")
+            model: ["matrix.org", "kde.org", "tchncs.de", i18n("Other...")]
         }
-        validator: RegularExpressionValidator {
-            regularExpression: /([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9]+(:[0-9]+)?/
+
+        QQC2.TextField {
+            id: customHomeserver
+
+            Kirigami.FormData.label: i18n("Url:")
+            visible: serverCombo.currentIndex === 3
+            onTextChanged: {
+                Controller.testHomeserver(text)
+            }
+            validator: RegularExpressionValidator {
+                regularExpression: /([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9]+(:[0-9]+)?/
+            }
+        }
+
+        QQC2.Button {
+            id: continueButton
+            text: i18nc("@action:button", "Continue")
+            action: root.action
         }
     }
 }

@@ -34,6 +34,7 @@
         <file>imports/NeoChat/Component/Timeline/FileDelegate.qml</file>
         <file>imports/NeoChat/Component/Timeline/ImageDelegate.qml</file>
         <file>imports/NeoChat/Component/Login/qmldir</file>
+        <file>imports/NeoChat/Component/Login/LoginSteep.qml</file>
         <file>imports/NeoChat/Component/Login/Login.qml</file>
         <file>imports/NeoChat/Component/Login/Password.qml</file>
         <file>imports/NeoChat/Component/Login/LoginRegister.qml</file>
